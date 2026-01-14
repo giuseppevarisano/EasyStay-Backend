@@ -1,7 +1,6 @@
 # EasyStay - Backend
 
-Sistema REST per la gestione delle prenotazioni di case vacanza. Il progetto implementa 
-logiche di business complesse con particolare attenzione alla testabilità e alla sicurezza.
+Sistema REST per la gestione delle prenotazioni di case vacanza.
 
 ## Architettura e Tecnologie
 - Java 17 e Spring Boot 3
