@@ -6,24 +6,27 @@ import it.easystay.exception.StanzaGiaOccupataException;
 import it.easystay.model.Casavacanza;
 import it.easystay.model.Prenotazione;
 import it.easystay.model.Utente;
-import it.easystay.repository.CasaRepository;
 import it.easystay.repository.PrenotazioneRepository;
 import it.easystay.repository.UtenteRepository;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PessimisticLockException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
-
 @Service
 @RequiredArgsConstructor
 public class PrenotazioneService {
 
-    private final CasaRepository casaRepo;
+    private final EntityManager entityManager;
     private final PrenotazioneRepository prenoRepo;
     private final UtenteRepository utenteRepo;
 
@@ -35,30 +38,37 @@ public class PrenotazioneService {
             throw new IllegalArgumentException("La data di fine precede l'inizio");
         }
 
-        // 2. Recupero Casa
-        Casavacanza casa = casaRepo.findById(request.getCasaId())
-                .orElseThrow(() -> new EntityNotFoundException("Non abbiamo trovato nessuna casa con l'ID: " + request.getCasaId()));;
+        try {
+            // 2. Recupero Casa con lock pessimista usando EntityManager
+            Casavacanza casa = entityManager.find(Casavacanza.class, request.getCasaId(), LockModeType.PESSIMISTIC_WRITE);
+            if (casa == null) {
+                throw new EntityNotFoundException("Non abbiamo trovato nessuna casa con l'ID: " + request.getCasaId());
+            }
 
-        // 3. Controllo disponibilità
-        // query di overlap (Inizio <= FineEsistente AND Fine >= InizioEsistente)
-        boolean giaOccupata = prenoRepo.existsByCasaAndDataInizioFine(casa, request.getDataInizio(), request.getDataFine());
-        if (giaOccupata) {
+            // 3. Controllo disponibilità (mentre abbiamo il lock sulla casa)
+            boolean giaOccupata = prenoRepo.existsByCasaAndDataInizioFine(casa, request.getDataInizio(), request.getDataFine());
+            if (giaOccupata) {
+                throw new StanzaGiaOccupataException(request.getCasaId());
+            }
+
+            // 4. Cerchiamo l'utente sul database
+            Utente utente = utenteRepo.findByEmail(email)
+                    .orElseThrow(() -> new EntityNotFoundException("Utente non trovato con email: " + email));
+
+            // 5. Costruzione oggetto Prenotazione
+            var nuovaPrenotazione = Prenotazione.builder()
+                    .dataInizio(request.getDataInizio())
+                    .dataFine(request.getDataFine())
+                    .casa(casa)
+                    .utente(utente)
+                    .build();
+
+            return mapToResponse(prenoRepo.save(nuovaPrenotazione));
+
+        } catch (PessimisticLockException | PessimisticLockingFailureException | PersistenceException ex) {
+            // Lock timeout o altri problemi di concorrenza -> rispondi come conflitto
             throw new StanzaGiaOccupataException(request.getCasaId());
         }
-
-        // 4.  Cerchiamo l'utente sul database
-        Utente utente = utenteRepo.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("Utente non trovato con email: " + email));
-
-        // 5. Costruzione oggetto Prenotazione
-        var NuovaPrenotazione = Prenotazione.builder()
-                .dataInizio(request.getDataInizio())
-                .dataFine(request.getDataFine())
-                .casa(casa)    // Casa recuperata al punto 2
-                .utente(utente) // Utente recuperato al punto 4
-                .build();
-
-        return mapToResponse(prenoRepo.save(NuovaPrenotazione));
     }
 
     public Page<PrenotazioneResponseDTO> getPrenotazioniPerUtente(Long utenteId, Pageable pageable) {
