@@ -65,7 +65,7 @@ public class PrenotazioneService {
 
             return mapToResponse(prenoRepo.save(nuovaPrenotazione));
 
-        } catch (PessimisticLockException | PessimisticLockingFailureException | PersistenceException ex) {
+        } catch (PessimisticLockingFailureException | PersistenceException ex) {
             // Lock timeout o altri problemi di concorrenza -> rispondi come conflitto
             throw new StanzaGiaOccupataException(request.getCasaId());
         }
