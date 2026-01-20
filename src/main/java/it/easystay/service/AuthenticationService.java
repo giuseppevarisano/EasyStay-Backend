@@ -1,8 +1,9 @@
 package it.easystay.service;
 
+import it.easystay.dto.AuthenticationRequestDTO;
 import it.easystay.dto.AuthenticationResponseDTO;
-import it.easystay.dto.LoginRequestDTO;
 import it.easystay.dto.RegisterRequestDTO;
+import it.easystay.dto.RegisterResponseDTO;
 import it.easystay.exception.CustomDuplicateException;
 import it.easystay.model.Utente;
 import it.easystay.repository.UtenteRepository;
@@ -22,7 +23,7 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
-    public AuthenticationResponseDTO register(RegisterRequestDTO request) {
+    public RegisterResponseDTO register(RegisterRequestDTO request) {
 
         // Trasformiamo il DTO in Entity (Mapping manuale)
         var utente = Utente.builder()
@@ -42,11 +43,15 @@ public class AuthenticationService {
 
         // Generiamo il token
         var jwtToken = jwtService.generateToken(utente);
-        return new AuthenticationResponseDTO(jwtToken);
+        return RegisterResponseDTO.builder()
+                .token(jwtToken)
+                .email(utente.getEmail())
+                .nome(utente.getNome())
+                .build();
     }
 
     // LOGIN: Verifica le credenziali e restituisce il token
-    public AuthenticationResponseDTO authenticate(LoginRequestDTO request) {
+    public AuthenticationResponseDTO authenticate(AuthenticationRequestDTO request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.email(),

@@ -1,9 +1,10 @@
 package it.easystay.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import it.easystay.dto.AuthenticationRequestDTO;
 import it.easystay.dto.AuthenticationResponseDTO;
-import it.easystay.dto.LoginRequestDTO;
 import it.easystay.dto.RegisterRequestDTO;
+import it.easystay.dto.RegisterResponseDTO;
 import it.easystay.service.AuthenticationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,12 +23,12 @@ public class AuthController {
     private final AuthenticationService service;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponseDTO> register(@Valid @RequestBody RegisterRequestDTO request) {
+    public ResponseEntity<RegisterResponseDTO> register(@Valid @RequestBody RegisterRequestDTO request) {
         return ResponseEntity.ok(service.register(request));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponseDTO> authenticate(@RequestBody LoginRequestDTO request) {
+    public ResponseEntity<AuthenticationResponseDTO> authenticate(@RequestBody AuthenticationRequestDTO request) {
         return ResponseEntity.ok(service.authenticate(request));
     }
 }

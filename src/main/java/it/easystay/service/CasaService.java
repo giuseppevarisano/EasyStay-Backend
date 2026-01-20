@@ -1,6 +1,7 @@
 package it.easystay.service;
 
 import it.easystay.dto.CasavacanzaRequestDTO;
+import it.easystay.dto.CasavacanzaResponseDTO;
 import it.easystay.model.Casavacanza;
 import it.easystay.repository.CasaRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +16,7 @@ public class CasaService {
 
     private final CasaRepository casaRepository;
 
-    public Casavacanza crea(CasavacanzaRequestDTO request) {
+    public CasavacanzaResponseDTO crea(CasavacanzaRequestDTO request) {
         Casavacanza nuovaCasa = Casavacanza.builder()
                 .nome(request.getNome())
                 .indirizzo(request.getIndirizzo())
@@ -23,12 +24,29 @@ public class CasaService {
                 .prezzoNotte(request.getPrezzoNotte())
                 .build();
 
-        return casaRepository.save(nuovaCasa);
+        Casavacanza salvata = casaRepository.save(nuovaCasa);
+        
+        return CasavacanzaResponseDTO.builder()
+                .id(salvata.getId())
+                .nome(salvata.getNome())
+                .indirizzo(salvata.getIndirizzo())
+                .citta(salvata.getCitta())
+                .prezzoNotte(salvata.getPrezzoNotte())
+                .build();
     }
 
     @Cacheable("casePerCitta")
-    public List<Casavacanza> cercaPerCitta(String citta) {
+    public List<CasavacanzaResponseDTO> cercaPerCitta(String citta) {
         System.out.println("Sto andando a leggere nel Database per: " + citta);
-        return casaRepository.findByCittaIgnoreCase(citta);
+        return casaRepository.findByCittaIgnoreCase(citta)
+                .stream()
+                .map(casa -> CasavacanzaResponseDTO.builder()
+                        .id(casa.getId())
+                        .nome(casa.getNome())
+                        .indirizzo(casa.getIndirizzo())
+                        .citta(casa.getCitta())
+                        .prezzoNotte(casa.getPrezzoNotte())
+                        .build())
+                .toList();
     }
 }
