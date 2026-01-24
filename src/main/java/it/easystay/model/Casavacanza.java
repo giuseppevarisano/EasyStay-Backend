@@ -5,6 +5,7 @@ import lombok.*;
 import java.util.*;
 
 @Entity
+@Table(name = "casevacanza")
 @Getter
 @Setter
 @NoArgsConstructor

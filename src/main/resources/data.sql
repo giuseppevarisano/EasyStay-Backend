@@ -1,33 +1,18 @@
--- 1. PULIZIA
-DELETE FROM PRENOTAZIONE;
-DELETE FROM CASAVACANZA;
-DELETE FROM UTENTI;
+-- 1. POPOLAMENTO UTENTI
+-- Usiamo IGNORE: se l'email (che è UNIQUE) esiste già, non fa nulla.
+INSERT IGNORE INTO utenti (id, email, nome, password, ruolo) VALUES
+(1, 'admin@easystay.it', 'Admin', '$2a$10$t.upuAP7Rh.EGKeD3vLA6.9GycgrldjuxRpIQxBm.94K3iwa0ODjO', 'ADMIN'),
+(2, 'ospite@test.it', 'Giuseppe', '$2a$10$t.upuAP7Rh.EGKeD3vLA6.9GycgrldjuxRpIQxBm.94K3iwa0ODjO', 'USER');
 
--- 2. POPOLAMENTO UTENTI
-INSERT INTO UTENTI (ID, EMAIL, NOME, PASSWORD, RUOLO)
-SELECT X, 'utente' || X || '@esempio.it', 'Nome' || X, 'hash_bcrypt_qui', 'USER'
-FROM SYSTEM_RANGE(1, 1000);
+-- 2. POPOLAMENTO CASEVACANZA
+-- Qui usiamo l'ID come chiave di controllo
+INSERT IGNORE INTO casevacanza (id, nome, indirizzo, citta, prezzo_notte, version) VALUES
+(1, 'Villa Paradiso', 'Via Mare 1', 'Olbia', 200.0, 1),
+(2, 'Baita Relax', 'Via Monti 10', 'Aosta', 120.0, 1),
+(3, 'Loft Urbano', 'Via Torino 5', 'Milano', 95.0, 1);
 
--- 3. POPOLAMENTO CASAVACANZA
-INSERT INTO CASAVACANZA (ID, NOME, INDIRIZZO, CITTA, PREZZO_NOTTE, VERSION)
-SELECT X, 'Villa ' || X, 'Via ' || X, 'Roma', 50.0 + (X % 150), 1
-FROM SYSTEM_RANGE(1, 4000);
-
--- 4. POPOLAMENTO PRENOTAZIONE (Date Variabili)
--- Usiamo X per spostare la data di inizio, così non sono tutte uguali
-INSERT INTO PRENOTAZIONE (ID, DATA_INIZIO, DATA_FINE, CASA_ID, UTENTE_ID)
-SELECT
-    X,
-    DATEADD('DAY', (X % 365), CURRENT_DATE), -- Distribuisce le date su un anno
-    DATEADD('DAY', (X % 365) + 7, CURRENT_DATE),
-    (X % 4000) + 1,
-    (X % 1000) + 1
-FROM SYSTEM_RANGE(1, 50000);
-
--- 5. SINCRONIZZAZIONE SEQUENZE
-ALTER TABLE UTENTI ALTER COLUMN ID RESTART WITH (SELECT MAX(ID) + 1 FROM UTENTI);
-ALTER TABLE CASAVACANZA ALTER COLUMN ID RESTART WITH (SELECT MAX(ID) + 1 FROM CASAVACANZA);
-ALTER TABLE PRENOTAZIONE ALTER COLUMN ID RESTART WITH (SELECT MAX(ID) + 1 FROM PRENOTAZIONE);
-
--- 6. INDICE PER PRESTAZIONI
-CREATE INDEX idx_prenotazione_date ON PRENOTAZIONE(DATA_INIZIO);
+-- 3. POPOLAMENTO PRENOTAZIONI
+-- Colleghiamo gli ID che abbiamo forzato sopra
+INSERT IGNORE INTO prenotazioni (id, data_inizio, data_fine, casa_id, utente_id) VALUES
+(1, '2026-06-01', '2026-06-08', 1, 2),
+(2, '2026-07-15', '2026-07-22', 2, 2);

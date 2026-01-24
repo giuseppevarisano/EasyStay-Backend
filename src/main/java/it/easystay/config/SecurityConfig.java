@@ -31,7 +31,7 @@ public class SecurityConfig {
                 )
 
                 .headers(headers -> headers
-                        .frameOptions(frame -> frame.sameOrigin())
+                        .frameOptions(frame -> frame.disable()) // Disabilita completamente il blocco dei frame per H2
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
