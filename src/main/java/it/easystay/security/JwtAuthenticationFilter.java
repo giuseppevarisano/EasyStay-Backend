@@ -37,29 +37,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Estrai il token JWT rimuovendo il prefisso "Bearer "
-        String jwt = authHeader.substring(7);
+        try {
+            String jwt = authHeader.substring(7);
+            String email = jwtService.extractUsername(jwt);
 
-        // Estrai l'email (o username) dal token usando il service
-        String email = jwtService.extractUsername(jwt);
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                var utente = utenteRepository.findByEmail(email).orElse(null);
 
-        // Verifica che l'utente non sia già autenticato
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            // Recupera l'utente dal database tramite il repository
-            var utente = utenteRepository.findByEmail(email)
-                    .orElse(null);
-
-            // Se l'utente esiste e il token è valido, autenticalo
-            if (utente != null && jwtService.isTokenValid(jwt, utente)) {
-                Authentication authentication = new UsernamePasswordAuthenticationToken(
-                        utente,                       // Oggetto utente autenticato
-                        null,                         // Password non necessaria
-                        utente.getAuthorities()       // Ruoli e permessi dell'utente
-                );
-
-                // Salva l'autenticazione nel contesto di sicurezza
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                if (utente != null && jwtService.isTokenValid(jwt, utente)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            utente, null, utente.getAuthorities()
+                    );
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+        } catch (Exception e) {
+            // Se il token è scaduto o malformato, logghiamo l'evento.
+            // Non chiamiamo il resolver: lasciamo che il contesto resti vuoto.
+            logger.warn("JWT non valido: " + e.getMessage());
         }
 
         // Passa al prossimo filtro nella catena
