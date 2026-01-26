@@ -3,18 +3,19 @@ package it.easystay.service;
 import it.easystay.dto.CasavacanzaRequestDTO;
 import it.easystay.dto.CasavacanzaResponseDTO;
 import it.easystay.model.Casavacanza;
-import it.easystay.repository.CasaRepository;
+import it.easystay.repository.CasavacanzaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class CasaService {
+public class CasavacanzaService {
 
-    private final CasaRepository casaRepository;
+    private final CasavacanzaRepository casavacanzaRepository;
 
     public CasavacanzaResponseDTO crea(CasavacanzaRequestDTO request) {
         Casavacanza nuovaCasa = Casavacanza.builder()
@@ -24,7 +25,7 @@ public class CasaService {
                 .prezzoNotte(request.getPrezzoNotte())
                 .build();
 
-        Casavacanza salvata = casaRepository.save(nuovaCasa);
+        Casavacanza salvata = casavacanzaRepository.save(nuovaCasa);
         
         return CasavacanzaResponseDTO.builder()
                 .id(salvata.getId())
@@ -38,8 +39,24 @@ public class CasaService {
     @Cacheable("casePerCitta")
     public List<CasavacanzaResponseDTO> cercaPerCitta(String citta) {
         System.out.println("Sto andando a leggere nel Database per: " + citta);
-        return casaRepository.findByCittaIgnoreCase(citta)
+        return casavacanzaRepository.findByCittaIgnoreCase(citta)
                 .stream()
+                .map(casa -> CasavacanzaResponseDTO.builder()
+                        .id(casa.getId())
+                        .nome(casa.getNome())
+                        .indirizzo(casa.getIndirizzo())
+                        .citta(casa.getCitta())
+                        .prezzoNotte(casa.getPrezzoNotte())
+                        .build())
+                .toList();
+    }
+
+    public List<CasavacanzaResponseDTO> cercaCaseDisponibili(LocalDate inizio, LocalDate fine, String citta) {
+        // 1. Chiamata al repository (restituisce List<Casavacanza> entità)
+        List<Casavacanza> entitaFound = casavacanzaRepository.findAvailableHouses(inizio, fine, citta);
+
+        // 2. Mappatura manuale (o con ModelMapper/MapStruct) da Entity a DTO
+        return entitaFound.stream()
                 .map(casa -> CasavacanzaResponseDTO.builder()
                         .id(casa.getId())
                         .nome(casa.getNome())

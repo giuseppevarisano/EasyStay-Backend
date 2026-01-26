@@ -4,7 +4,7 @@ import it.easystay.dto.PrenotazioneRequestDTO;
 import it.easystay.model.Casavacanza;
 import it.easystay.model.Utente;
 import it.easystay.repository.PrenotazioneRepository;
-import it.easystay.repository.CasaRepository;
+import it.easystay.repository.CasavacanzaRepository;
 import it.easystay.repository.UtenteRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
@@ -27,7 +27,7 @@ class PrenotazioneServiceUnitTest {
     private EntityManager entityManager; // AGGIUNGI QUESTO: è il colpevole dell'errore
 
     @Mock
-    private CasaRepository casaRepository;
+    private CasavacanzaRepository casavacanzaRepository;
 
     @Mock
     private PrenotazioneRepository prenotazioneRepository;
