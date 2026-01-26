@@ -5,6 +5,7 @@ import it.easystay.dto.AuthenticationResponseDTO;
 import it.easystay.dto.RegisterRequestDTO;
 import it.easystay.dto.RegisterResponseDTO;
 import it.easystay.exception.CustomDuplicateException;
+import it.easystay.mapper.UtenteMapper;
 import it.easystay.model.Utente;
 import it.easystay.repository.UtenteRepository;
 import it.easystay.security.JwtService;
@@ -22,49 +23,39 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final UtenteMapper utenteMapper; // <-- Iniettiamo il nuovo mapper
 
     public RegisterResponseDTO register(RegisterRequestDTO request) {
-
-        // Trasformiamo il DTO in Entity (Mapping manuale)
-        var utente = Utente.builder()
-                .nome(request.getNome())
-                .email(request.getEmail())
-                // Criptiamo la password presa dal DTO
-                .password(passwordEncoder.encode(request.getPassword()))
-                .ruolo(request.getRuolo())
-                .build();
-
         if (repository.existsByEmail(request.getEmail())) {
             throw new CustomDuplicateException("email", "Questa email è già registrata");
         }
 
-        // Salviamo l'entità nel database
+        // 1. Usiamo il mapper per creare l'Entity (la password viene ignorata nel mapper)
+        var utente = utenteMapper.toEntity(request);
+
+        // 2. Settiamo manualmente la password criptata (fondamentale per la sicurezza!)
+        utente.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        // 3. Salviamo
         repository.save(utente);
 
-        // Generiamo il token
+        // 4. Generiamo il token e usiamo il mapper per la risposta
         var jwtToken = jwtService.generateToken(utente);
-        return RegisterResponseDTO.builder()
-                .token(jwtToken)
-                .email(utente.getEmail())
-                .nome(utente.getNome())
-                .build();
+
+        RegisterResponseDTO response = utenteMapper.toRegisterResponse(utente);
+        response.setToken(jwtToken); // Aggiungiamo il token generato
+
+        return response;
     }
 
-    // LOGIN: Verifica le credenziali e restituisce il token
     public AuthenticationResponseDTO authenticate(AuthenticationRequestDTO request) {
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.email(),
-                        request.password()
-                )
+                new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
 
-        // Se l'autenticazione fallisce, il metodo sopra lancia un'eccezione e il codice si ferma.
-        // Se arriviamo qui, l'utente è autenticato con successo.
-        var utente = repository.findByEmail(request.email())
-                .orElseThrow();
-
+        var utente = repository.findByEmail(request.email()).orElseThrow();
         var jwtToken = jwtService.generateToken(utente);
+
         return new AuthenticationResponseDTO(jwtToken);
     }
 }

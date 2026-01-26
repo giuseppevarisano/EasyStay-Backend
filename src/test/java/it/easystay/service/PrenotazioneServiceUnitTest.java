@@ -1,7 +1,10 @@
 package it.easystay.service;
 
 import it.easystay.dto.PrenotazioneRequestDTO;
+import it.easystay.dto.PrenotazioneResponseDTO;
+import it.easystay.mapper.PrenotazioneMapper;
 import it.easystay.model.Casavacanza;
+import it.easystay.model.Prenotazione;
 import it.easystay.model.Utente;
 import it.easystay.repository.PrenotazioneRepository;
 import it.easystay.repository.CasavacanzaRepository;
@@ -34,6 +37,9 @@ class PrenotazioneServiceUnitTest {
 
     @Mock
     private UtenteRepository utenteRepository;
+
+    @Mock
+    private PrenotazioneMapper prenoMapper; // <-- AGGIUNGI QUESTO
 
     @InjectMocks
     private PrenotazioneService prenotazioneService;
@@ -75,6 +81,8 @@ class PrenotazioneServiceUnitTest {
         it.easystay.model.Prenotazione prenotazioneSalvata = new it.easystay.model.Prenotazione();
         prenotazioneSalvata.setId(100L);
 
+        PrenotazioneResponseDTO responseDTO = new PrenotazioneResponseDTO();
+
         // 2. MOCK ENTITY MANAGER (Fondamentale perché il service usa find)
         when(entityManager.find(eq(Casavacanza.class), eq(idCasa), eq(LockModeType.PESSIMISTIC_WRITE)))
                 .thenReturn(casaFinta);
@@ -89,6 +97,8 @@ class PrenotazioneServiceUnitTest {
         // 5. MOCK SAVE
         when(prenotazioneRepository.save(any(it.easystay.model.Prenotazione.class)))
                 .thenReturn(prenotazioneSalvata);
+
+        when(prenoMapper.toResponseDTO(any(Prenotazione.class))).thenReturn(responseDTO);
 
         // 6. ESECUZIONE E VERIFICA
         assertDoesNotThrow(() -> prenotazioneService.salvaPrenotazione(request, emailTest));
