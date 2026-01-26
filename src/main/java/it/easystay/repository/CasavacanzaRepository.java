@@ -20,7 +20,7 @@ public interface CasavacanzaRepository extends JpaRepository<Casavacanza, Long> 
 
     @Query("SELECT c FROM Casavacanza c WHERE LOWER(c.citta) = LOWER(:citta) " +
             "AND NOT EXISTS (SELECT p FROM Prenotazione p WHERE p.casa = c AND " +
-            "(p.dataInizio < :dataFine AND p.dataFine > :dataInizio))")
+            "(p.dataInizio <= :dataFine AND p.dataFine >= :dataInizio))")
     List<Casavacanza> findAvailableHouses(
             @Param("dataInizio") LocalDate dataInizio,
             @Param("dataFine") LocalDate dataFine,
