@@ -14,6 +14,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.SignatureException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 @RequiredArgsConstructor
@@ -51,10 +56,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
+        } catch (ExpiredJwtException e) {
+            // Rimuovi il {} perché il tuo logger attuale non lo supporta come segnaposto
+            logger.warn("Token JWT scaduto: " + e.getMessage());
+
+        } catch (MalformedJwtException | SignatureException e) {
+            logger.warn("Token JWT non valido o firma compromessa: " + e.getMessage());
+
         } catch (Exception e) {
-            // Se il token è scaduto o malformato, logghiamo l'evento.
-            // Non chiamiamo il resolver: lasciamo che il contesto resti vuoto.
-            logger.warn("JWT non valido: " + e.getMessage());
+            // Per loggare l'eccezione intera, passa il messaggio e l'oggetto 'e' separatamente
+            logger.error("Errore imprevisto durante l'autenticazione JWT: " + e.getMessage(), e);
         }
 
         // Passa al prossimo filtro nella catena
