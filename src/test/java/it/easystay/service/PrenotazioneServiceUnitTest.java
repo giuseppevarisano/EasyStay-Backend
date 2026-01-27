@@ -97,8 +97,16 @@ class PrenotazioneServiceUnitTest {
 
         when(prenoMapper.toResponseDTO(any(Prenotazione.class))).thenReturn(responseDTO);
 
-        // 6. ESECUZIONE E VERIFICA
-        assertDoesNotThrow(() -> prenotazioneService.salvaPrenotazione(request, emailTest));
-        verify(prenotazioneRepository, times(1)).save(any());
+        // 6. ESECUZIONE (Chiamiamo il metodo una sola volta!)
+        PrenotazioneResponseDTO risultato = prenotazioneService.salvaPrenotazione(request, emailTest);
+
+        // 7. VERIFICHE SUL RISULTATO
+        assertNotNull(risultato, "Il risultato non deve essere nullo");
+        assertEquals(responseDTO, risultato, "Il DTO restituito deve essere quello fornito dal mapper");
+
+        // 8. VERIFICHE SUI MOCK (Controlliamo che siano stati chiamati esattamente 1 volta)
+        verify(prenotazioneRepository, times(1)).save(any(Prenotazione.class));
+        verify(prenoMapper, times(1)).toResponseDTO(any(Prenotazione.class));
+        verify(utenteRepository, times(1)).findByEmail(emailTest);
     }
 }
