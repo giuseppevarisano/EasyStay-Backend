@@ -1,10 +1,13 @@
 package it.easystay.service;
 
 import it.easystay.dto.PrenotazioneRequestDTO;
+import it.easystay.dto.PrenotazioneResponseDTO;
+import it.easystay.mapper.PrenotazioneMapper;
 import it.easystay.model.Casavacanza;
+import it.easystay.model.Prenotazione;
 import it.easystay.model.Utente;
 import it.easystay.repository.PrenotazioneRepository;
-import it.easystay.repository.CasaRepository;
+import it.easystay.repository.CasavacanzaRepository;
 import it.easystay.repository.UtenteRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
@@ -27,13 +30,13 @@ class PrenotazioneServiceUnitTest {
     private EntityManager entityManager; // AGGIUNGI QUESTO: è il colpevole dell'errore
 
     @Mock
-    private CasaRepository casaRepository;
-
-    @Mock
     private PrenotazioneRepository prenotazioneRepository;
 
     @Mock
     private UtenteRepository utenteRepository;
+
+    @Mock
+    private PrenotazioneMapper prenoMapper; // <-- AGGIUNGI QUESTO
 
     @InjectMocks
     private PrenotazioneService prenotazioneService;
@@ -75,6 +78,8 @@ class PrenotazioneServiceUnitTest {
         it.easystay.model.Prenotazione prenotazioneSalvata = new it.easystay.model.Prenotazione();
         prenotazioneSalvata.setId(100L);
 
+        PrenotazioneResponseDTO responseDTO = new PrenotazioneResponseDTO();
+
         // 2. MOCK ENTITY MANAGER (Fondamentale perché il service usa find)
         when(entityManager.find(eq(Casavacanza.class), eq(idCasa), eq(LockModeType.PESSIMISTIC_WRITE)))
                 .thenReturn(casaFinta);
@@ -90,8 +95,18 @@ class PrenotazioneServiceUnitTest {
         when(prenotazioneRepository.save(any(it.easystay.model.Prenotazione.class)))
                 .thenReturn(prenotazioneSalvata);
 
-        // 6. ESECUZIONE E VERIFICA
-        assertDoesNotThrow(() -> prenotazioneService.salvaPrenotazione(request, emailTest));
-        verify(prenotazioneRepository, times(1)).save(any());
+        when(prenoMapper.toResponseDTO(any(Prenotazione.class))).thenReturn(responseDTO);
+
+        // 6. ESECUZIONE (Chiamiamo il metodo una sola volta!)
+        PrenotazioneResponseDTO risultato = prenotazioneService.salvaPrenotazione(request, emailTest);
+
+        // 7. VERIFICHE SUL RISULTATO
+        assertNotNull(risultato, "Il risultato non deve essere nullo");
+        assertEquals(responseDTO, risultato, "Il DTO restituito deve essere quello fornito dal mapper");
+
+        // 8. VERIFICHE SUI MOCK (Controlliamo che siano stati chiamati esattamente 1 volta)
+        verify(prenotazioneRepository, times(1)).save(any(Prenotazione.class));
+        verify(prenoMapper, times(1)).toResponseDTO(any(Prenotazione.class));
+        verify(utenteRepository, times(1)).findByEmail(emailTest);
     }
 }

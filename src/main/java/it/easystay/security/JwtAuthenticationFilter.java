@@ -14,6 +14,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.SignatureException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 @RequiredArgsConstructor
@@ -37,29 +42,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Estrai il token JWT rimuovendo il prefisso "Bearer "
-        String jwt = authHeader.substring(7);
+        try {
+            String jwt = authHeader.substring(7);
+            String email = jwtService.extractUsername(jwt);
 
-        // Estrai l'email (o username) dal token usando il service
-        String email = jwtService.extractUsername(jwt);
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                var utente = utenteRepository.findByEmail(email).orElse(null);
 
-        // Verifica che l'utente non sia già autenticato
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            // Recupera l'utente dal database tramite il repository
-            var utente = utenteRepository.findByEmail(email)
-                    .orElse(null);
-
-            // Se l'utente esiste e il token è valido, autenticalo
-            if (utente != null && jwtService.isTokenValid(jwt, utente)) {
-                Authentication authentication = new UsernamePasswordAuthenticationToken(
-                        utente,                       // Oggetto utente autenticato
-                        null,                         // Password non necessaria
-                        utente.getAuthorities()       // Ruoli e permessi dell'utente
-                );
-
-                // Salva l'autenticazione nel contesto di sicurezza
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                if (utente != null && jwtService.isTokenValid(jwt, utente)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            utente, null, utente.getAuthorities()
+                    );
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+        } catch (ExpiredJwtException e) {
+            // Rimuovi il {} perché il tuo logger attuale non lo supporta come segnaposto
+            logger.warn("Token JWT scaduto: " + e.getMessage());
+
+        } catch (MalformedJwtException | SignatureException e) {
+            logger.warn("Token JWT non valido o firma compromessa: " + e.getMessage());
+
+        } catch (Exception e) {
+            // Per loggare l'eccezione intera, passa il messaggio e l'oggetto 'e' separatamente
+            logger.error("Errore imprevisto durante l'autenticazione JWT: " + e.getMessage(), e);
         }
 
         // Passa al prossimo filtro nella catena
