@@ -31,7 +31,6 @@ public class CasavacanzaService {
 
     @Cacheable("casePerCitta")
     public List<CasavacanzaResponseDTO> cercaPerCitta(String citta) {
-        System.out.println("Sto andando a leggere nel Database per: " + citta);
         List<Casavacanza> caseTrovate = casavacanzaRepository.findByCittaIgnoreCase(citta);
 
         // Mappatura della lista automatica
