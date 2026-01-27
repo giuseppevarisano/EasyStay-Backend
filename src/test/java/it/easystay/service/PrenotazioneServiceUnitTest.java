@@ -30,9 +30,6 @@ class PrenotazioneServiceUnitTest {
     private EntityManager entityManager; // AGGIUNGI QUESTO: è il colpevole dell'errore
 
     @Mock
-    private CasavacanzaRepository casavacanzaRepository;
-
-    @Mock
     private PrenotazioneRepository prenotazioneRepository;
 
     @Mock
