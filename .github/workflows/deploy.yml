@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "master" ] # Modificato da main a master
+    branches: [ "master" ]
   pull_request:
-    branches: [ "master" ] # Modificato da main a master
+    branches: [ "master" ]
 
 jobs:
   test-and-build:
@@ -24,14 +24,10 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Esegui i Test
-        run: mvn test
-
-      - name: Build JAR
-        run: mvn clean package -DskipTests
+      - name: Esegui Test, Coverage e Build
+        run: mvn clean verify
 
       - name: Log in to GHCR
-        # Modificato il controllo del branch qui sotto
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: docker/login-action@v3
         with:
@@ -40,7 +36,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and Push Docker Image
-        # Modificato il controllo del branch qui sotto
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: docker/build-push-action@v5
         with:
