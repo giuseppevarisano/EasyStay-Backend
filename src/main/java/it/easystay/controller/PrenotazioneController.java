@@ -13,6 +13,7 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,9 +22,12 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/api/prenotazioni")
+@RequestMapping(
+        value = "/api/prenotazioni",
+        produces = MediaType.APPLICATION_JSON_VALUE  // ← Applicato a tutti i metodi
+)
 @RequiredArgsConstructor
-@Tag(name = "2. Prenotazioni", description = "API per la gestione delle prenotazioni delle case vacanza")
+@Tag(name = "Prenotazioni", description = "API per la gestione delle prenotazioni delle case vacanza")
 public class PrenotazioneController {
 
     private final PrenotazioneService service;
@@ -35,11 +39,13 @@ public class PrenotazioneController {
     @ApiResponse(responseCode = "201", description = "Prenotazione creata con successo")
     @ApiResponse(responseCode = "400", description = "Dati di input non validi o date incoerenti")
     @ApiResponse(responseCode = "404", description = "Casa vacanza non trovata")
-    @PostMapping
-    public ResponseEntity<PrenotazioneResponseDTO> crea(@Valid @RequestBody PrenotazioneRequestDTO request, Principal principal) {
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<PrenotazioneResponseDTO> crea(
+            @Valid @RequestBody PrenotazioneRequestDTO request,
+            Principal principal) {
 
         String email = principal.getName();
-        PrenotazioneResponseDTO response = service.salvaPrenotazione(request,email);
+        PrenotazioneResponseDTO response = service.salvaPrenotazione(request, email);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
