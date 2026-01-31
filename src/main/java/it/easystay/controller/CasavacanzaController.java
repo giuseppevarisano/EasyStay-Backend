@@ -5,6 +5,7 @@ import it.easystay.dto.CasavacanzaResponseDTO;
 import it.easystay.service.CasavacanzaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,13 +13,16 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/case")
+@RequestMapping(
+        value = "/api/case",
+        produces = MediaType.APPLICATION_JSON_VALUE  // ← Applicato a tutti i metodi
+)
 @RequiredArgsConstructor
 public class CasavacanzaController {
 
     private final CasavacanzaService casavacanzaService;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public CasavacanzaResponseDTO crea(@RequestBody CasavacanzaRequestDTO casa) {
         return casavacanzaService.crea(casa);
     }
