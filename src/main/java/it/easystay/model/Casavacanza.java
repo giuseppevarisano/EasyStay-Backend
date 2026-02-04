@@ -28,8 +28,14 @@ public class Casavacanza {
     @Column(nullable = false, length = 50)
     private String citta;
 
-    @Version
+    @Version // OPTIMISTIC LOCK
     private Integer version;
+    /*t=0ms:  Mario   → SELECT casa (version=1)
+      t=1ms:  Luigi   → SELECT casa (version=1)  ← Stesso version!
+      t=50ms: Mario   → UPDATE casa SET version=2 WHERE id=5 AND version=1  ✅
+      t=100ms: Luigi  → UPDATE casa SET version=2 WHERE id=5 AND version=1  ❌ FALLISCE!
+                  (version è già 2, non 1!)
+      t=101ms: Luigi  → OptimisticLockException*/
 
     // ESCLUDO la lista dal toString per rompere la ricorsione
     /*Quando NON specificate il fetch, JPA usa i default:

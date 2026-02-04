@@ -38,6 +38,15 @@ public class PrenotazioneService {
             throw new IllegalArgumentException("La data di fine precede l'inizio");
         }
 
+        // 1. PESSIMISTIC LOCK sulla casa
+        /*t=0ms:  Mario   → SELECT ... FOR UPDATE (LOCK acquisito ✅)
+            t=1ms:  Luigi   → SELECT ... FOR UPDATE (⏳ IN ATTESA...)
+            t=50ms: Mario   → Controlla disponibilità (OK)
+            t=100ms: Mario  → INSERT prenotazione
+            t=150ms: Mario  → COMMIT (LOCK rilasciato ✅)
+            t=151ms: Luigi  → LOCK acquisito ✅
+            t=200ms: Luigi  → Controlla disponibilità (❌ ora c'è prenotazione Mario!)
+            t=250ms: Luigi  → throw StanzaGiaOccupataException*/
         Casavacanza casa = entityManager.find(Casavacanza.class, request.getCasaId(), LockModeType.PESSIMISTIC_WRITE);
         if (casa == null) {
             throw new EntityNotFoundException("Non abbiamo trovato nessuna casa con l'ID: " + request.getCasaId());

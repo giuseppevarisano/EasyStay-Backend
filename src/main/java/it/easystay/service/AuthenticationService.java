@@ -8,7 +8,7 @@ import it.easystay.exception.CustomDuplicateException;
 import it.easystay.mapper.UtenteMapper;
 import it.easystay.model.Utente;
 import it.easystay.repository.UtenteRepository;
-import it.easystay.security.JwtService;
+import it.easystay.security.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,7 +21,7 @@ public class AuthenticationService {
 
     private final UtenteRepository utenteRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
+    private final JwtUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
     private final UtenteMapper utenteMapper; // <-- Iniettiamo il nuovo mapper
 
@@ -41,7 +41,7 @@ public class AuthenticationService {
         utenteRepository.save(utente);
 
         // 4. Generiamo il token e usiamo il mapper per la risposta
-        var jwtToken = jwtService.generateToken(utente);
+        var jwtToken = jwtUtils.generateToken(utente);
 
         RegisterResponseDTO response = utenteMapper.toRegisterResponse(utente);
         response.setToken(jwtToken); // Aggiungiamo il token generato
@@ -56,7 +56,7 @@ public class AuthenticationService {
         // Se fallisce → lancia BadCredentialsException
 
         Utente utente = utenteRepository.findByEmail(authenticationRequestDTO.email()).orElseThrow();
-        var jwtToken = jwtService.generateToken(utente);
+        var jwtToken = jwtUtils.generateToken(utente);
 
         return new AuthenticationResponseDTO(jwtToken);
     }

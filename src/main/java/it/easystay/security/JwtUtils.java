@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -15,12 +16,10 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Service
-public class JwtService {
+public class JwtUtils {
 
-    // Questa è una chiave segreta di esempio a 256-bit (codificata in Hex)
-    // In un progetto reale, questa stringa non deve mai stare nel codice ma in una variabile d'ambiente
-    //TODO @Value("${jwt.secret}")
-    private static final String SECRET_KEY = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
+    @Value("${jwt.secret}")
+    private String SECRET_KEY;
 
     // ESTRAZIONE DATI
     public String extractUsername(String token) {

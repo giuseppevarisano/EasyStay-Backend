@@ -10,20 +10,24 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.annotation.Order;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.slf4j.MDC;
+
 
 import java.io.IOException;
 
 //Prima che la richiesta arrivi al Controller, Spring Security passa attraverso un filtro JWT
 @Component
 @RequiredArgsConstructor
+@Order(2)  // Eseguito dopo RequestIdFilter
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;                // Servizio per trattare i token JWT
+    private final JwtUtils jwtUtils;                // Servizio per trattare i token JWT
     private final UtenteRepository utenteRepository;    // Repository per accedere alla tabella Utente
 
     @Override
@@ -43,12 +47,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             String jwt = authHeader.substring(7);
-            String email = jwtService.extractUsername(jwt);
+            String email = jwtUtils.extractUsername(jwt);
 
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 Utente utente = utenteRepository.findByEmail(email).orElse(null);
 
-                if (utente != null && jwtService.isTokenValid(jwt, utente)) {
+                if (utente != null && jwtUtils.isTokenValid(jwt, utente)) {
+                    MDC.put("userId", String.valueOf(utente.getId()));
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             utente, null, utente.getAuthorities()
                     );
@@ -69,6 +74,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         // Passa al prossimo filtro nella catena
-        filterChain.doFilter(request, response);
+        try{
+            filterChain.doFilter(request, response);
+        }finally {
+            MDC.remove("userId");
+        }
     }
 }
