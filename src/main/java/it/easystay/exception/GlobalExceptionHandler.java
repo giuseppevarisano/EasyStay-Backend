@@ -117,6 +117,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleEntityNotFound(EntityNotFoundException ex) {
+        log.warn("Entità non trovata: {}", ex.getMessage());
+
         Map<String, String> response = new HashMap<>();
 
         response.put("error", "Risorsa non trovata");
@@ -126,6 +128,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleDatiErrati(IllegalArgumentException ex) {
+
+        log.warn("Dati errati ricevuti: {}", ex.getMessage());
+
         Map<String, String> response = new HashMap<>();
 
         response.put("error", "Dati errati");
