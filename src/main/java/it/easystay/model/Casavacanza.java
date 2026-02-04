@@ -16,17 +16,47 @@ public class Casavacanza {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, length = 100)
     private String nome;
+
+    @Column(nullable = false)
     private String indirizzo;
+
+    @Column(nullable = false, name = "prezzo_notte")
     private Double prezzoNotte;
+
+    @Column(nullable = false, length = 50)
     private String citta;
 
     @Version
     private Integer version;
 
     // ESCLUDO la lista dal toString per rompere la ricorsione
+    /*Quando NON specificate il fetch, JPA usa i default:
+        @OneToMany → LAZY (default)
+        @ManyToOne → EAGER (default)
+        @ManyToMany → LAZY (default)
+        @OneToOne → EAGER (default)
+        Se voleste specificarlo esplicitamente:
+
+@OneToMany(mappedBy = "casa", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+
+cascade = CascadeType.ALL
+Se salvi una Casavacanza, salva automaticamente tutte le Prenotazioni
+Se cancelli una Casavacanza, cancella tutte le prenotazioni associate
+Se aggiorni una Casavacanza, aggiorna le prenotazioni*/
+
     @OneToMany(mappedBy = "casa", cascade = CascadeType.ALL)
     @ToString.Exclude
+    /*se usassimo SET invece che LIST
+    PRO
+        ✅ No duplicati automatici
+        ✅ Semanticamente corretto
+    CONTRO
+        ❌ Devi implementare equals() e hashCode() in Prenotazione
+        ❌ Perdi ordine inserimento (a meno di LinkedHashSet)
+
+        List va bene (Hibernate gestisce unicità via DB*/
     private List<Prenotazione> prenotazioni = new ArrayList<>();
 
 }

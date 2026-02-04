@@ -12,10 +12,11 @@ import java.time.LocalDate;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@SpringBootTest
-@ActiveProfiles("h2") // <--- Questo dice a Spring: "Ignora MySQL, usa application-test.properties"
-@Transactional
-class PrenotazioneServiceTest {
+@SpringBootTest //Carica intero contesto Spring - Integration/E2E
+@ActiveProfiles("h2") // Usa DB reale (H2) - Integration
+@Transactional // Rollback automatico dopo test - Integration
+//Testi il Service + il Database
+class PrenotazioneServiceIntegrationTestServiceLayer {
 
     @Autowired
     private PrenotazioneService prenotazioneService;

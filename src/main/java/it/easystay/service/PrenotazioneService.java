@@ -38,11 +38,11 @@ public class PrenotazioneService {
             throw new IllegalArgumentException("La data di fine precede l'inizio");
         }
 
+        Casavacanza casa = entityManager.find(Casavacanza.class, request.getCasaId(), LockModeType.PESSIMISTIC_WRITE);
+        if (casa == null) {
+            throw new EntityNotFoundException("Non abbiamo trovato nessuna casa con l'ID: " + request.getCasaId());
+        }
         try {
-            Casavacanza casa = entityManager.find(Casavacanza.class, request.getCasaId(), LockModeType.PESSIMISTIC_WRITE);
-            if (casa == null) {
-                throw new EntityNotFoundException("Non abbiamo trovato nessuna casa con l'ID: " + request.getCasaId());
-            }
 
             boolean giaOccupata = prenoRepo.existsByCasaAndDataInizioFine(casa, request.getDataInizio(), request.getDataFine());
             if (giaOccupata) {

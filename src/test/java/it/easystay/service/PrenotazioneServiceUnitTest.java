@@ -7,7 +7,6 @@ import it.easystay.model.Casavacanza;
 import it.easystay.model.Prenotazione;
 import it.easystay.model.Utente;
 import it.easystay.repository.PrenotazioneRepository;
-import it.easystay.repository.CasavacanzaRepository;
 import it.easystay.repository.UtenteRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
@@ -16,12 +15,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import jakarta.persistence.EntityNotFoundException;
 
 import java.time.LocalDate;
 import java.util.Optional;
 
-import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PrenotazioneServiceUnitTest {
@@ -45,18 +45,18 @@ class PrenotazioneServiceUnitTest {
     void quandoCasaNonEsiste_DeveLanciareEccezione() {
 
         Long idInesistente = 99L;
-        PrenotazioneRequestDTO request = new PrenotazioneRequestDTO();
-        request.setCasaId(idInesistente);
-        request.setDataInizio(LocalDate.now());
-        request.setDataFine(LocalDate.now().plusDays(1));
+        PrenotazioneRequestDTO prenotazioneRequestDTO = new PrenotazioneRequestDTO();
+        prenotazioneRequestDTO.setCasaId(idInesistente);
+        prenotazioneRequestDTO.setDataInizio(LocalDate.now());
+        prenotazioneRequestDTO.setDataFine(LocalDate.now().plusDays(1));
 
 
         // Mocka l'entityManager invece del repository
         when(entityManager.find(eq(Casavacanza.class), eq(idInesistente), eq(LockModeType.PESSIMISTIC_WRITE)))
                 .thenReturn(null); // Simuliamo che non trovi nulla
 
-        assertThrows(RuntimeException.class, () -> {
-            prenotazioneService.salvaPrenotazione(request,"utente1@esempio.it");
+        assertThrows(EntityNotFoundException.class, () -> {
+            prenotazioneService.salvaPrenotazione(prenotazioneRequestDTO,"utente1@esempio.it");
         });
 
         // Verifichiamo che non sia mai stata tentata la riga "save"

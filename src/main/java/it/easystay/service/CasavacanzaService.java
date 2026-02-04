@@ -39,9 +39,9 @@ public class CasavacanzaService {
 
     public List<CasavacanzaResponseDTO> cercaCaseDisponibili(LocalDate inizio, LocalDate fine, String citta) {
         // 1. Chiamata al repository
-        List<Casavacanza> entitaFound = casavacanzaRepository.findAvailableHouses(inizio, fine, citta);
+        List<Casavacanza> caseDisponibili = casavacanzaRepository.cercaCaseDisponibiliPerDateECitta(inizio, fine, citta);
 
         // 2. Mappatura automatica (niente più stream e builder manuali!)
-        return casavacanzaMapper.toResponseDTOList(entitaFound);
+        return casavacanzaMapper.toResponseDTOList(caseDisponibili);
     }
 }

@@ -39,7 +39,7 @@ public class PrenotazioneController {
     @ApiResponse(responseCode = "201", description = "Prenotazione creata con successo")
     @ApiResponse(responseCode = "400", description = "Dati di input non validi o date incoerenti")
     @ApiResponse(responseCode = "404", description = "Casa vacanza non trovata")
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value= "crea", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PrenotazioneResponseDTO> crea(
             @Valid @RequestBody PrenotazioneRequestDTO request,
             Principal principal) {

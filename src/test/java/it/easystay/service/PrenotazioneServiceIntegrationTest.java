@@ -18,20 +18,21 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@ActiveProfiles("h2") // <--- Questo dice a Spring: "Ignora MySQL, usa application-test.properties"
+@SpringBootTest // Carica intero contesto Spring - Integration/E2E
+@ActiveProfiles("h2") // Usa DB reale (H2) - Integration
 @AutoConfigureMockMvc
-@Transactional
-class PrenotazioneServiceE2ETest {
+@Transactional // Rollback automatico dopo test - Integration
+/*Web Integration Test (MockMvc): Testi Controller + Service + Database. È il test più completo ("Verticale").*/
+class PrenotazioneServiceIntegrationTest {
 
     @Autowired
-    private MockMvc mockMvc;
+    private MockMvc mockMvc; // Simula chiamate HTTP al Controller - ✅ API Test
 
     @Autowired
     private ObjectMapper objectMapper; // Per trasformare oggetti in JSON
 
     @Test
-    @WithMockUser(username = "utente1@esempio.it", roles = "USER") // Simula un "Security Context" popolato
+    @WithMockUser(username = "utente1@esempio.it", roles = "USER") // Simula un "Security Context" popolato, autenticazione Spring Security - ✅ Security Test
     void testCreazionePrenotazioneE2E() throws Exception {
         PrenotazioneRequestDTO request = new PrenotazioneRequestDTO();
         request.setCasaId(1L);

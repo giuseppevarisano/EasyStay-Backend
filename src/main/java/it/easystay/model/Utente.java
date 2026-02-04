@@ -17,6 +17,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+//implementato l'interfaccia UserDetails in Utente per integrare direttamente la sicurezza di Spring Security nel modello dei dati
 public class Utente implements UserDetails {
 
     @Id

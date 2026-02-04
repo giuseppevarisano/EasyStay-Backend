@@ -22,10 +22,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @SpringBootTest
 @ActiveProfiles("h2") // <--- Questo dice a Spring: "Ignora MySQL, usa application-test.properties"
 @AutoConfigureMockMvc
-public class PrenotazioneConcurrencyE2E {
+/*Web Integration Test (MockMvc): Testi Controller + Service + Database. È il test più completo ("Verticale").*/
+public class PrenotazioneConcurrencyIntegrationTest {
 
     @Autowired
-    private MockMvc mockMvc;
+    private MockMvc mockMvc; //simula chiamate HTTP senza server reale
 
     @Autowired
     private ObjectMapper objectMapper;

@@ -120,6 +120,18 @@ public class GlobalExceptionHandler {
 
         response.put("error", "Dati errati");
         response.put("message", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
+
+    // Gestione per problemi al database o connessione caduta (Punto 3)
+    @ExceptionHandler(org.springframework.dao.DataAccessException.class)
+    public ResponseEntity<Map<String, String>> handleDatabaseError(org.springframework.dao.DataAccessException ex) {
+        Map<String, String> response = new HashMap<>();
+        response.put("error", "Database Error");
+        response.put("message", "Impossibile salvare i dati, riprova più tardi.");
+
+        // Usiamo 503 (Servizio non disponibile) o 500
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
+    }
+
 }

@@ -19,6 +19,7 @@ public class JwtService {
 
     // Questa è una chiave segreta di esempio a 256-bit (codificata in Hex)
     // In un progetto reale, questa stringa non deve mai stare nel codice ma in una variabile d'ambiente
+    //TODO @Value("${jwt.secret}")
     private static final String SECRET_KEY = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
 
     // ESTRAZIONE DATI
