@@ -56,6 +56,9 @@ public class GlobalExceptionHandler {
     // CASO 1: JSON malformato o Enum non validi (HttpMessageNotReadableException)
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, String>> handleJsonErrors(HttpMessageNotReadableException ex) {
+
+        log.warn("JSON malformato o valore enum non valido: {}", ex.getMessage());
+
         Map<String, String> errorResponse = new HashMap<>();
         String message = "Formato JSON non valido o valore non permesso.";
 
@@ -66,6 +69,9 @@ public class GlobalExceptionHandler {
                 String acceptedValues = Arrays.toString(ife.getTargetType().getEnumConstants());
                 message = String.format("Il valore '%s' per il campo '%s' non è valido. Valori ammessi: %s",
                         invalidValue, fieldName, acceptedValues);
+
+                log.warn("Valore enum non valido: campo={}, valore={}, validi={}",
+                        fieldName, invalidValue, acceptedValues);
             }
         }
 
@@ -81,6 +87,9 @@ public class GlobalExceptionHandler {
         ex.getBindingResult().getFieldErrors().forEach(error ->
                 errors.put(error.getField(), error.getDefaultMessage())
         );
+
+        log.warn("Errori di validazione: {}", errors);
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
     }
 
@@ -96,6 +105,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, String>> handleBadCredentials(BadCredentialsException ex) {
+        log.warn("Tentativo di login fallito: credenziali errate");
         Map<String, String> response = new HashMap<>();
 
         response.put("error", "Unauthorized");
@@ -126,6 +136,9 @@ public class GlobalExceptionHandler {
     // Gestione per problemi al database o connessione caduta (Punto 3)
     @ExceptionHandler(org.springframework.dao.DataAccessException.class)
     public ResponseEntity<Map<String, String>> handleDatabaseError(org.springframework.dao.DataAccessException ex) {
+
+        log.error("Errore di accesso al database: {}", ex.getMessage(), ex);
+
         Map<String, String> response = new HashMap<>();
         response.put("error", "Database Error");
         response.put("message", "Impossibile salvare i dati, riprova più tardi.");
