@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import it.easystay.dto.CasavacanzaRequestDTO;
 import it.easystay.dto.CasavacanzaResponseDTO;
 import it.easystay.service.CasavacanzaService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
@@ -30,7 +31,7 @@ public class CasavacanzaController {
             description = "Creazione nuova casa vacanza possibile solo se sei loggato come utente con ruolo ADMIN."
     )
     @PostMapping(value = "crea",consumes = MediaType.APPLICATION_JSON_VALUE)
-    public CasavacanzaResponseDTO crea(@RequestBody CasavacanzaRequestDTO casa) {
+    public CasavacanzaResponseDTO crea(@RequestBody @Valid CasavacanzaRequestDTO casa) {
         return casavacanzaService.crea(casa);
     }
 
@@ -49,9 +50,22 @@ public class CasavacanzaController {
             return ResponseEntity.badRequest().build();
         }
 
-        List<CasavacanzaResponseDTO> risultati = casavacanzaService.cercaCaseDisponibili(inizio, fine, citta);
+        List<CasavacanzaResponseDTO> caseVacanzaDisponibili = casavacanzaService.cercaCaseDisponibili(inizio, fine, citta);
         //Spring MVC serializza in JSON automaticamente (tramite Jackson)
-        return ResponseEntity.ok(risultati);
+
+        //TODO diamo anche il numero delle casevacanza Disponibili per possibile paginazione futura
+        /*RicercaCaseResponse response = new RicercaCaseResponse(
+        risultati,
+        risultati.size(),
+        risultati.isEmpty() ? "Nessuna casa disponibile per la ricerca" : null
+    );public class RicercaCaseResponse {
+    private List<CasavacanzaResponseDTO> case;
+    private int totale;
+    private String messaggio;  // Opzionale
+
+    // Constructor, getter, setter
+}*/
+        return ResponseEntity.ok(caseVacanzaDisponibili);
         //Client (riceve JSON)
     }
 }
